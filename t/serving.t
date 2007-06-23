@@ -121,6 +121,8 @@ if (!($child_pid = fork())) {
     exit(0);
 }
 
+sleep(1); # just to play it safe on slow OS/machine combos
+
 test_url(GET => "/url_that_doesn't_exist", RC_NOT_FOUND, qr/Not Found in Site Map/,
          "Pathological case - mount doesn't exist" );
 
