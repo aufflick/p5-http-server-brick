@@ -568,9 +568,9 @@ prototypes with WEBrick and implemented them in (what I hope is) a Perlish way.
 
 =item It's version 0.0.5 - there's bound to be some bugs!
 
-=item No consideration has been given to SSL.
+=item The tests fail on windows due to forking limitations. I don't see any reason why the server itself won't work but I haven't tried it personally, and I have to figure out a way to test it from a test script that will work on Windows.
 
-=item See the redirection limitation in L<Response> above.
+=item No consideration has been given to SSL.
 
 =item No attention has been given to propagating any exception text into the http error (although the exception/die message will appear in the error_log).
 
