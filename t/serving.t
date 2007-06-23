@@ -17,8 +17,8 @@ my $host = $ENV{HSB_TEST_HOST} || 'localhost';
 
 diag( '' );
 diag( '' );
-diag( "Using port: $port and host: $host");
-diag( 'if these are not suitable settings on your machine, set the environment' );
+diag( "Using port: $port and host: $host for test server.");
+diag( 'If these are not suitable settings on your machine, set the environment' );
 diag( 'variables HSB_TEST_PORT and HSB_TEST_HOST to something suitable.');
 diag( '' );
 
