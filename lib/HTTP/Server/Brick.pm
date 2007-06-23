@@ -82,8 +82,8 @@ use constant DEBUG => $ENV{DEBUG} || 0;
 my $__singleton;
 my $__server_should_run = 0;
 
-$SIG{__WARN__} = sub { $__singleton->_log( error => '[warn] ' . shift ) };
-$SIG{__DIE__} = sub { $__singleton->_log( error => '[die] ' . $_[0] ); die (@_) };
+$SIG{__WARN__} = sub { $__singleton ? $__singleton->_log( error => '[warn] ' . shift ) : CORE::warn(@_) };
+$SIG{__DIE__} = sub { $__singleton->_log( error => '[die] ' . $_[0] ) if $__singleton; CORE::die (@_) };
 $SIG{HUP} = sub { $__server_should_run = 0; };
 
 

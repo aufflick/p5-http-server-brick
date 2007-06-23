@@ -1,4 +1,5 @@
 use Test::More tests => 59;
+use strict;
 
 # $Id$
 
@@ -9,7 +10,7 @@ BEGIN {
 use LWP;
 use LWP::UserAgent;
 use HTTP::Status;
-use POSIX ":sys_wait_h";
+use POSIX qw(:sys_wait_h SIGHUP SIGKILL);
 
 my $port = $ENV{HSB_TEST_PORT} || 85432;
 my $host = $ENV{HSB_TEST_HOST} || 'localhost';
@@ -41,7 +42,7 @@ mkdir $temp_dir_non_indexed or die "Unable to create temp dir $temp_dir_non_inde
     print $text_fh "Hello Everybody";
 
     my $html_fh;
-    open($html_fh, ">$temp_dir/$temp_html_file") or die "Unable to write to temp file $temp_hmtl_file";
+    open($html_fh, ">$temp_dir/$temp_html_file") or die "Unable to write to temp file $temp_html_file";
     print $html_fh "<html><body><h1>Hi Dr Nick</h1></body></html>";
 }
 
@@ -174,6 +175,6 @@ sub test_url {
 }
 
 cmp_ok(kill( SIGHUP, $child_pid), '==', 1, "Requesting server shutdown via HUP ($child_pid)");
-#sleep(6); # just to be safe in case it takes some OS/hardware combinations a while to clean up
+sleep(6); # just to be safe in case it takes some OS/hardware combinations a while to clean up
 waitpid($child_pid, WNOHANG);
 cmp_ok(kill( SIGKILL, $child_pid), '==', 0, "Shouldn't need to force kill server");
