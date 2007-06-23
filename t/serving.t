@@ -16,13 +16,17 @@ my $port = $ENV{HSB_TEST_PORT} || 85432;
 my $host = $ENV{HSB_TEST_HOST} || 'localhost';
 
 diag( '' );
+diag( '' );
 diag( "Using port: $port and host: $host");
 diag( 'if these are not suitable settings on your machine, set the environment' );
 diag( 'variables HSB_TEST_PORT and HSB_TEST_HOST to something suitable.');
 diag( '' );
 
+# set the error out to stdout to play nice with test::harness
 my $server;
-ok( $server = HTTP::Server::Brick->new( port => $port, host => $host ), 'Created server object.');
+ok( $server = HTTP::Server::Brick->new(
+    port => $port, host => $host, error_log => \*STDOUT,
+   ), 'Created server object.');
 isa_ok( $server, 'HTTP::Server::Brick');
 
 
