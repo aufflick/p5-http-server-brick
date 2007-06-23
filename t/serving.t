@@ -46,6 +46,14 @@ mkdir $temp_dir_non_indexed or die "Unable to create temp dir $temp_dir_non_inde
     print $html_fh "<html><body><h1>Hi Dr Nick</h1></body></html>";
 }
 
+# clean up temp dirs
+END {
+    unlink "$temp_dir/$temp_text_file" if $temp_dir && $temp_text_file && -f "$temp_dir/$temp_text_file";
+    unlink "$temp_dir/$temp_html_file" if $temp_dir && $temp_html_file&& -f "$temp_dir/$temp_html_file";
+    rmdir $temp_dir if -d $temp_dir;
+    rmdir $temp_dir_non_indexed if -d $temp_dir_non_indexed;
+}
+
 # no point testing these - they just return 1.
 $server->mount( '/static/test', { path => $temp_dir } );
 $server->mount( '/exotic_error', { handler => sub { RC_CONFLICT } });
