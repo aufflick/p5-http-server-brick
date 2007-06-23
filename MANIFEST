@@ -1,5 +1,4 @@
 # $Id$
-.cvsignore
 Build.PL
 Changes
 lib/HTTP/Server/Brick.pm
