@@ -26,11 +26,12 @@ This document describes HTTP::Server::Brick version 0.0.5
         path => '/some/directory/htdocs',
     });
     
-    # this is of course, not a validly formed html response...
     $server->mount( '/test/proc' => {
         handler => sub {
             my ($req, $res) = @_;
-            $res->add_content("<h1>Foo</h1><p>$req->{relative_path}</p>");
+            $res->add_content("<html><body>
+                                 <p>Path info: $req->{path_info}</p>
+                               </body></html>");
             1;
         },
         wildcard => 1,
@@ -201,6 +202,8 @@ sub mount {
     my $mount_type = exists $args->{handler} ? 'handler' :
       exists $args->{path} ? 'directory' : '(unknown)';
     $self->_log( error => 'Mounted' . ($args->{wildcard} ? ' wildcard' : '') . " $mount_type at $uri" );
+
+    1;
 }
 
 =head2 start
@@ -246,6 +249,8 @@ sub start {
             $self->_send_error($conn, $req, RC_NOT_FOUND, ' Not Found in Site Map');
         }
     }
+
+    1;
 }
 
 sub _handle_static_request {
@@ -272,8 +277,11 @@ sub _handle_static_request {
         $self->_log( access => '[' . RC_OK . "] $match->{full_path}" );
 
         
-    } else {
+    } elsif (-d $path) {
         $self->_send_error($conn, $req, RC_FORBIDDEN, 'Directory Indexing Not Allowed' );
+
+    } else {
+        $self->_send_error($conn, $req, RC_NOT_FOUND, 'File Not Found' );
     }
 }
 
@@ -285,7 +293,7 @@ sub _handle_dynamic_request {
 
     # stuff the match info into the request
     $req->{mount_path} = $submap->{mount_path};
-    $req->{path_info} = $match->{path_info};
+    $req->{path_info} = $match->{path_info} ? '/' . $match->{path_info} : undef;
 
     # actually call the handler
     if ( my $return_code = eval { $submap->{handler}->($req, $res) } ) {
@@ -314,12 +322,19 @@ sub _handle_dynamic_request {
             $self->_send_error( $conn, $req, $res->code, $res->message );
 
         } elsif ($res->is_redirect) {
-            if (UNIVERSAL::isa($res->base, 'URI')) {
-                $conn->send_redirect($res->base->path, $code);
-                $self->_log( access => "[$code] Redirecting to " . $res->base->path );
+            if (UNIVERSAL::can($res->{target_uri}, 'path')) {
+                my $target = $res->{target_uri}->path;
+
+                if ($target !~ m!^/!) {
+                    # prepend dirname of original request
+                    $match->{full_path} =~ m!^(.*/)! and
+                      $target = $1 . $target;
+                }
+                $conn->send_redirect($target, $code);
+                $self->_log( access => "[$code] Redirecting to " . $target );
             } else {
                 $self->_send_error($conn, $req, RC_INTERNAL_SERVER_ERROR,
-                              'Handler Tried to Redirect Without Setting Base Path');
+                              'Handler Tried to Redirect Without Setting Target URI');
             }
 
         } else {
@@ -330,6 +345,8 @@ sub _handle_dynamic_request {
     } else {
         $self->_send_error($conn, $req, RC_INTERNAL_SERVER_ERROR, 'Handler Failed');
     }
+
+    1;
 }
 
 sub _render_directory {
@@ -349,7 +366,7 @@ sub _render_directory {
 <a href="..">.. (Parent directory)</a>
 END_HEADER
 
-        $res->add_content("<a href=\"$_\">$_</a>\n") for map {s!.*/!!; $_} glob "$path/*";
+        $res->add_content("<a href=\"$_\">$_</a>\n") for map {s!.*/!!; $_} sort glob "$path/*";
 
         $res->add_content(<<END_FOOTER);
 </pre></blockquote>
@@ -497,10 +514,15 @@ something else. The C<Content-length> header is set for you.
 
 =head2 Redirection
 
-If you set the response code to a redirect code, you need to set the C<base> of the
-request object to an instance of a C<URI::http> object reflecting the fully qualified uri you want to
-redirect to. This is weak, and a separate redirect property should be used (plus the base
-if the redirect is relative).
+If you set the response code to a redirect code, you need to set a C<{target_uri}> property on the
+request object to an instance of a C<URI::http> object reflecting the uri you want to redirect to
+(either fully qualified or relative to the directory of the requested url). There are examples
+in the test file C<serve.t>.
+
+This is weak because we're breaking encapsulation by assuming it's ok to stuff an extra variable
+into the response object (just as we are to propogate the C<path_info> property). It does in fact
+work fine and is unlikely to ever break, but a future version (prior to 1.0.0) of this module will
+replace this behavior with a subclassed L<HTTP::Response> and appropriate setter/getter methods.
 
 =head2 Handler Return
 
