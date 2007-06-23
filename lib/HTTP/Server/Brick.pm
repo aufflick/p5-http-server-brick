@@ -19,13 +19,13 @@ This document describes HTTP::Server::Brick version 0.0.5
 
     use HTTP::Server::Brick;
     use HTTP::Status;
-
+    
     my $server = HTTP::Server::Brick->new( port => 8888 );
-
+    
     $server->mount( '/foo/bar' => {
         path => '/some/directory/htdocs',
     });
-
+    
     # this is of course, not a validly formed html response...
     $server->mount( '/test/proc' => {
         handler => sub {
@@ -35,7 +35,7 @@ This document describes HTTP::Server::Brick version 0.0.5
         },
         wildcard => 1,
     });
-
+    
     $server->mount( '/test/proc/texty' => {
         handler => sub {
             my ($req, $res) = @_;
@@ -45,7 +45,7 @@ This document describes HTTP::Server::Brick version 0.0.5
         },
         wildcard => 1,
     });
-
+    
     # these next two are equivalent
     $server->mount( '/favicon.ico' => {
         handler => sub { RC_NOT_FOUND },
