@@ -1,0 +1,43 @@
+HTTP-Server-Brick version 0.0.5
+
+$Id$
+
+HTTP::Server::Brick allows you to quickly wrap a prototype web server around some
+Perl code. The underlying server daemon is HTTP::Daemon and the performance should
+be fine for demo's, light internal systems, etc.
+
+See the POD documentation in the module for more information.
+
+INSTALLATION
+
+To install with Module::Build, you can use the following commands:
+
+    perl Build.PL
+    ./Build
+    ./Build test
+    ./Build install
+
+Alternatively, run the following commands (Module::Build is still
+required, this is just a wrapper):
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+
+DEPENDENCIES
+
+    LWP
+    Test::More
+    version
+
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2007, Mark Aufflick
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+
