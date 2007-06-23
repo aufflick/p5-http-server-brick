@@ -517,7 +517,7 @@ something else. The C<Content-length> header is set for you.
 If you set the response code to a redirect code, you need to set a C<{target_uri}> property on the
 request object to an instance of a C<URI::http> object reflecting the uri you want to redirect to
 (either fully qualified or relative to the directory of the requested url). There are examples
-in the test file C<serve.t>.
+in the test file C<t/serving.t> in this module's distribution.
 
 This is weak because we're breaking encapsulation by assuming it's ok to stuff an extra variable
 into the response object (just as we are to propogate the C<path_info> property). It does in fact
