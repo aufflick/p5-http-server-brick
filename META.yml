@@ -3,7 +3,7 @@ name: HTTP-Server-Brick
 version: 0.0.5
 author:
   - 'Mark Aufflick <mark@aufflick.com>'
-abstract: Simple http server "in the style of" Ruby's WEBrick
+abstract: Simple pure perl http server for prototyping "in the style of" Ruby's WEBrick
 license: perl
 resources:
   license: http://dev.perl.org/licenses/
@@ -11,7 +11,9 @@ requires:
   HTTP::Daemon: 0
   HTTP::Status: 0
   IO::Handle: 0
+  LWP: 0
   LWP::MediaTypes: 0
+  LWP::UserAgent: 0
   Test::More: 0
   version: 0
 generated_by: Module::Build version 0.2808
