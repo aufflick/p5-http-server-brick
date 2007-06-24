@@ -580,6 +580,9 @@ prototypes with WEBrick and implemented them in (what I hope is) a Perlish way.
 
 =back
 
+If you want to check out the latest development version of HTTP::Server::Brick
+you can do so from my L<CVS Server|http://cvs.pumptheory.com/viewcvs/viewcvs.cgi/perl/HTTP-Server-Brick/>.
+
 Please report any bugs or feature requests to
 C<bug-http-server-brick@rt.cpan.org>, through the web interface at
 L<http://rt.cpan.org> or via email to the author.

@@ -47,6 +47,11 @@ No attention has been given to propagating any exception text into
 the http error (although the exception/die message will appear in
 the error_log).
 
+Latest versions are always available from CPAN. Development versions
+are available from my CVS repository:
+
+http://cvs.pumptheory.com/viewcvs/viewcvs.cgi/perl/HTTP-Server-Brick/
+
 
 COPYRIGHT AND LICENCE
 
