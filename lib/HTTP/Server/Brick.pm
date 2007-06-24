@@ -7,7 +7,7 @@ our $VERSION = qv('0.0.5');
 
 =head1 NAME
 
-HTTP::Server::Brick - Simple http server for prototyping "in the style of" Ruby's WEBrick
+HTTP::Server::Brick - Simple pure perl http server for prototyping "in the style of" Ruby's WEBrick
 
 
 =head1 VERSION
