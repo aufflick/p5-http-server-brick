@@ -2,6 +2,9 @@ Revision history for HTTP-Server-Brick
 
 $Id$
 
+0.0.7  Mon Jun 25
+       Minor pod changes
+
 0.0.6  Mon Jun 25
        Minor pod and build changes
 
