@@ -50,7 +50,7 @@ the error_log).
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2007, Mark Aufflick
+Copyright (C) 2007, Mark Aufflick <mark@aufflick.com> http://mark.aufflick.com
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
