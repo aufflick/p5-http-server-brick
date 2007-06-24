@@ -162,7 +162,7 @@ Mutually exclusive with C<handler>.
 
 =item handler
 
-A coderef. See L<Handlers> below. Mutually exclusive with C<path>.
+A coderef. See L</Handlers> below. Mutually exclusive with C<path>.
 
 =item wildcard
 
@@ -170,7 +170,7 @@ If false, only exact matches will be served. If true, any requests based
 on the uri will be served. eg. if C<wildcard> is false, C<'/foo/bar'> will
 only match C<http://mysite.com/foo/bar> and not, say, C<http://mysite.com/foo/bar/sheep>.
 If C<wildcard> is true, on the other hand, it will match. A handler can
-access the path extension as described below in L<Handlers>.
+access the path extension as described below in L</Handlers>.
 
 Static handlers that are directories default to wildcard true.
 
@@ -214,7 +214,7 @@ sub mount {
 
 Actually starts the server - this will loop indefinately, or until
 the process recieves a C<HUP> signal in which case it will return after servicing
-any current request, or waiting for the next timeout (which defaults to 5s - see L<new>).
+any current request, or waiting for the next timeout (which defaults to 5s - see L</new>).
 
 =cut
 
