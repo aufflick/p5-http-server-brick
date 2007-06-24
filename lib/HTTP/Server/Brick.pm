@@ -58,6 +58,10 @@ This document describes HTTP::Server::Brick version 0.0.5
             1;
         },
     });
+    
+    # start accepting requests (won't return unless/until process
+    # receives a HUP signal)
+    $server->start;
 
 =head1 DESCRIPTION
 
