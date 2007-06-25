@@ -1,4 +1,4 @@
-use Test::More tests => 59;
+use Test::More tests => 67;
 use strict;
 
 # $Id$
