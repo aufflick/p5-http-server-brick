@@ -299,6 +299,18 @@ sub _handle_dynamic_request {
     $req->{mount_path} = $match->{mount_path};
     $req->{path_info} = $match->{path_info} ? '/' . $match->{path_info} : undef;
 
+    # and some other useful bits TODO: document (and, actually, subclass HTTP::Request...)
+    if ($req->header('Host') =~ /^(.*):(.*)$/) {
+        $req->{hostname} = $1;
+        $req->{port} = $2;
+    } elsif ($req->header('Host')) {
+        $req->{hostname} = $req->header('Host');
+        $req->{port} = $self->{daemon}->url->port;
+    } else {
+        $req->{hostname} = $self->{daemon}->url->host;
+        $req->{port} = $self->{daemon}->url->port;
+    }
+
     # actually call the handler
     if ( my $return_code = eval { $submap->{handler}->($req, $res) } ) {
 
