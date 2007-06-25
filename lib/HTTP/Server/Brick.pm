@@ -296,7 +296,7 @@ sub _handle_dynamic_request {
     $res->base($match->{full_path});
 
     # stuff the match info into the request
-    $req->{mount_path} = $submap->{mount_path};
+    $req->{mount_path} = $match->{mount_path};
     $req->{path_info} = $match->{path_info} ? '/' . $match->{path_info} : undef;
 
     # actually call the handler
@@ -433,7 +433,7 @@ sub _map_request {
             if ($match_depth != $depth && !$map->[$match_depth]{$mount_path}{wildcard}) {
                 return;
             }
-            
+
             return(
                 $map->[$match_depth]{$mount_path},
                 {

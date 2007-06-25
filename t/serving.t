@@ -81,6 +81,7 @@ $server->mount( '/test/wildcard_handler' => {
         my ($req, $res) = @_;
         $res->add_content("<html><body>
                                  <p>Path info: $req->{path_info}</p>
+                                 <p>Mount path: $req->{mount_path}</p>
                                </body></html>");
         1;
     },
@@ -154,10 +155,16 @@ test_url(GET => "/test/non_wildcard_handler/foo", RC_NOT_FOUND, qr!Not Found!,
          "Handlers default to non-wildcard", );
 
 test_url(GET => "/test/wildcard_handler", RC_OK, qr!Path info: </p>!,
-         "Wildcard mounted handler root", 'text/html' );
+         "Wildcard mounted handler root (path info)", 'text/html' );
+
+test_url(GET => "/test/wildcard_handler", RC_OK, qr!Mount path: /test/wildcard_handler</p>!,
+         "Wildcard mounted handler root (mount path)", 'text/html' );
 
 test_url(GET => "/test/wildcard_handler/foo/bar", RC_OK, qr!Path info: /foo/bar</p>!,
          "Wildcard mounted handler with extra path", 'text/html' );
+
+test_url(GET => "/test/wildcard_handler/foo/bar", RC_OK, qr!Mount path: /test/wildcard_handler</p>!,
+         "Wildcard mounted handler with extra path (mount path)", 'text/html' );
 
 test_url(GET => "/test/redirect", RC_OK, qr!<html><body>No wildcards here</body></html>!,
          "Fully qualified Redirect", 'text/html' );

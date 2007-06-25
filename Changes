@@ -2,6 +2,9 @@ Revision history for HTTP-Server-Brick
 
 $Id$
 
+0.0.8  Mon Jun 25
+       fixed mount_path issue and added test
+
 0.0.7  Mon Jun 25
        Minor pod changes
 
