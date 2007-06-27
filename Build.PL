@@ -10,6 +10,7 @@ my $builder = Module::Build->new(
     dist_author         => 'Mark Aufflick <mark@aufflick.com>',
     dist_version        => '0.0.8',
     requires => {
+        'Module::Build' => 0,
         'Test::More' => 0,
 		'version' => 0,
 		'HTTP::Daemon' => 0,
