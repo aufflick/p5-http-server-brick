@@ -93,7 +93,7 @@ $SIG{HUP} = sub { $__server_should_run = 0; };
 
 =head2 new
 
-C<new> takes six named arguments (all of which are optional):
+C<new> takes seven named arguments (all of which are optional):
 
 =over
 
@@ -125,6 +125,15 @@ If no index file is available (for a static path mount), do you want a clickable
 of files in the directory be rendered? Defaults to true.
 
 =back
+
+=item leave_sig_pipe_handler_alone
+
+HTTP::Daemon, the http server module this package is built on, chokes in certain multiple-request
+situations unless you ignore PIPE signals. By default PIPE signals are ignored as soon as you start
+the server (and restored if the server exits via HUP). If you want to handle PIPE signals your own
+way, pass in a true value for this.
+
+If this makes no sense to you, just ignore it - the "right thing" will happen by default.
 
 =cut
 
@@ -223,6 +232,12 @@ sub start {
 
     $__server_should_run = 1;
 
+    # HTTP::Daemon chokes on multiple simultaneous requests
+    unless ($self->{leave_sig_pipe_handler_alone}) {
+        $self->{_old_sig_pipe_handler} = $SIG{'PIPE'};
+        $SIG{'PIPE'} = 'IGNORE';
+    }
+
     $self->{daemon} = HTTP::Daemon->new(
         ReuseAddr => 1,
         LocalPort => $self->{port},
@@ -252,6 +267,11 @@ sub start {
         } else {
             $self->_send_error($conn, $req, RC_NOT_FOUND, ' Not Found in Site Map');
         }
+    }
+
+    
+    unless ($self->{leave_sig_pipe_handler_alone}) {
+        $SIG{'PIPE'} = $self->{_old_sig_pipe_handler};
     }
 
     1;
