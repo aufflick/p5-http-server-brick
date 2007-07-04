@@ -124,8 +124,6 @@ Defaults to C<index.html>.
 If no index file is available (for a static path mount), do you want a clickable list
 of files in the directory be rendered? Defaults to true.
 
-=back
-
 =item leave_sig_pipe_handler_alone
 
 HTTP::Daemon, the http server module this package is built on, chokes in certain multiple-request
@@ -134,6 +132,8 @@ the server (and restored if the server exits via HUP). If you want to handle PIP
 way, pass in a true value for this.
 
 If this makes no sense to you, just ignore it - the "right thing" will happen by default.
+
+=back
 
 =cut
 
