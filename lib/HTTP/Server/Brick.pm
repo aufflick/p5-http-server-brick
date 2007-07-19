@@ -1,7 +1,7 @@
 package HTTP::Server::Brick;
 
 use version;
-our $VERSION = qv('0.0.9');
+our $VERSION = qv('0.0.9_02');
 
 # $Id$
 
@@ -87,13 +87,17 @@ my $__singleton;
 my $__server_should_run = 0;
 
 $SIG{__WARN__} = sub { $__singleton ? $__singleton->_log( error => '[warn] ' . shift ) : CORE::warn(@_) };
-$SIG{__DIE__} = sub { $__singleton->_log( error => '[die] ' . $_[0] ) if $__singleton; CORE::die (@_) };
+$SIG{__DIE__} = sub {
+  CORE::die (@_) if $^S; # don't interfere with eval
+  $__singleton->_log( error => '[die] ' . $_[0] ) if $__singleton;
+  CORE::die (@_)
+};
 $SIG{HUP} = sub { $__server_should_run = 0; };
 
 
 =head2 new
 
-C<new> takes seven named arguments (all of which are optional):
+C<new> takes nine named arguments (all of which are optional):
 
 =over
 
@@ -133,6 +137,17 @@ way, pass in a true value for this.
 
 If this makes no sense to you, just ignore it - the "right thing" will happen by default.
 
+=item daemon_class
+
+The class which actually handles webserving.  The default is C<HTTP::Daemon>.
+If you want SSL, use C<HTTP::Daemon::SSL>.  Whatever class you use must inherit
+from HTTP::Daemon.
+
+=item daemon_args
+
+Sometimes you need to pass extra arguments to your C<daemon_class>, e.g. SSL
+configuration.  This arrayref will be dereferenced and passed to C<new>.
+
 =back
 
 =cut
@@ -141,12 +156,20 @@ sub new {
     my ($this, %args) = @_;
     my $class = ref($this) || $this;
 
+    if ($args{daemon_class} and not
+        eval { $args{daemon_class}->isa('HTTP::Daemon') }) {
+        die "daemon_class argument '$args{daemon_class}'" .
+          " must inherit from HTTP::Daemon";
+    }
+
     my $self = bless {
         _site_map => [],
         error_log => \*STDERR,
         access_log => \*STDOUT,
         directory_index_file => 'index.html',
         directory_indexing => 1,
+        daemon_class => 'HTTP::Daemon',
+        daemon_args  => [],
         %args,
        }, $class;
 
@@ -238,35 +261,46 @@ sub start {
         $SIG{'PIPE'} = 'IGNORE';
     }
 
-    $self->{daemon} = HTTP::Daemon->new(
+    $SIG{CHLD} = 'IGNORE' if $self->{fork};
+
+    $self->{daemon} = $self->{daemon_class}->new(
         ReuseAddr => 1,
         LocalPort => $self->{port},
         LocalHost => $self->{host},
         Timeout => 5,
-       ) or die $@;
+        @{ $self->{daemon_args} },
+       ) or die "Can't start daemon: $!";
 
     $self->_log(error => "Server started on " . $self->{daemon}->url);
 
     while ($__server_should_run) {
         my $conn = $self->{daemon}->accept or next;
-        my $req = $conn->get_request or next;
 
-        my ($submap, $match) = $self->_map_request($req);
+        # if we're a forkeing server, fork. The parent will wait for the next request.
+        # TODO: limit number of children
+        next if $self->{fork} and fork;
+        while (my $req = $conn->get_request) {
 
-        if ($submap) {
-            if (exists $submap->{path}) {
-                $self->_handle_static_request( $conn, $req, $submap, $match);
-                
-            } elsif (exists $submap->{handler}) {
-                $self->_handle_dynamic_request( $conn, $req, $submap, $match);
+          my ($submap, $match) = $self->_map_request($req);
 
-            } else {
-                $self->_send_error($conn, $req, RC_INTERNAL_SERVER_ERROR, 'Corrupt Site Map');
-            }
+          if ($submap) {
+              if (exists $submap->{path}) {
+                  $self->_handle_static_request( $conn, $req, $submap, $match);
+                  
+              } elsif (exists $submap->{handler}) {
+                  $self->_handle_dynamic_request( $conn, $req, $submap, $match);
 
-        } else {
-            $self->_send_error($conn, $req, RC_NOT_FOUND, ' Not Found in Site Map');
+              } else {
+                  $self->_send_error($conn, $req, RC_INTERNAL_SERVER_ERROR, 'Corrupt Site Map');
+              }
+
+          } else {
+              $self->_send_error($conn, $req, RC_NOT_FOUND, ' Not Found in Site Map');
+          }
         }
+        $conn->close;
+        undef($conn);
+        exit if $self->{fork};
     }
 
     
@@ -627,8 +661,15 @@ L<HTTP::Daemon>, L<HTTP::Daemon::App> and L<HTTP::Server::Simple> spring to mind
 
 =head1 AUTHOR
 
-Mark Aufflick  C<< <mark@aufflick.com> >> L<http://mark.aufflick.com/>
+=over
 
+=item Original version by: Mark Aufflick  C<< <mark@aufflick.com> >> L<http://mark.aufflick.com/>
+
+=item SSL and original forking support by: Hans Dieter Pearcey C<< <hdp@pobox.com> >>
+
+=item Maintained by: Mark Aufflick
+
+=back
 
 =head1 LICENCE AND COPYRIGHT
 
