@@ -1,7 +1,7 @@
 package HTTP::Server::Brick;
 
 use version;
-our $VERSION = qv('0.0.9_02');
+our $VERSION = qv('0.1.0');
 
 # $Id$
 
@@ -12,7 +12,7 @@ HTTP::Server::Brick - Simple pure perl http server for prototyping "in the style
 
 =head1 VERSION
 
-This document describes HTTP::Server::Brick version 0.0.9
+This document describes HTTP::Server::Brick version 0.1.0
 
 
 =head1 SYNOPSIS
@@ -276,7 +276,7 @@ sub start {
     while ($__server_should_run) {
         my $conn = $self->{daemon}->accept or next;
 
-        # if we're a forkeing server, fork. The parent will wait for the next request.
+        # if we're a forking server, fork. The parent will wait for the next request.
         # TODO: limit number of children
         next if $self->{fork} and fork;
         while (my $req = $conn->get_request) {
@@ -298,8 +298,7 @@ sub start {
               $self->_send_error($conn, $req, RC_NOT_FOUND, ' Not Found in Site Map');
           }
         }
-        $conn->close;
-        undef($conn);
+        # should use a guard object here to protect against early exit leaving zombies
         exit if $self->{fork};
     }
 
@@ -636,13 +635,35 @@ prototypes with WEBrick and implemented them in (what I hope is) a Perlish way.
 
 =over
 
-=item It's version 0.0.9 - there's bound to be some bugs!
+=item It's version 0.1.0 - there's bound to be some bugs!
 
 =item The tests fail on windows due to forking limitations. I don't see any reason why the server itself won't work but I haven't tried it personally, and I have to figure out a way to test it from a test script that will work on Windows.
 
-=item No consideration has been given to SSL.
+=item In forking mode there is no attempt to limit the number of forked children - beware of forking yourself ;)
 
 =item No attention has been given to propagating any exception text into the http error (although the exception/die message will appear in the error_log).
+
+=item The current version of HTTP::Daemon::SSL has a feature/documentation conflict where it will never timeout. This means your server won't respond to a HUP signal until the next request is served. If this is not satisfactory for you, check to see if a later version fixes the issue, or include the following code to patch HTTP::Daemon::SSL (works as of HTTP::Daemon::SSL version 1.02):
+
+  use HTTP::Daemon::SSL;
+  
+  {
+   package HTTP::Daemon::SSL;
+   
+   sub accept
+   {
+       my $self = shift;
+       my $pkg = shift || "HTTP::Daemon::ClientConn::SSL";
+       my ($sock, $peer) = IO::Socket::SSL::accept($self,$pkg);
+       if ($sock) {
+           ${*$sock}{'httpd_daemon'} = $self;
+           return wantarray ? ($sock, $peer) : $sock;
+       }
+       else {
+           return;
+       }
+   }
+  }
 
 =back
 
@@ -665,7 +686,7 @@ L<HTTP::Daemon>, L<HTTP::Daemon::App> and L<HTTP::Server::Simple> spring to mind
 
 =item Original version by: Mark Aufflick  C<< <mark@aufflick.com> >> L<http://mark.aufflick.com/>
 
-=item SSL and original forking support by: Hans Dieter Pearcey C<< <hdp@pobox.com> >>
+=item SSL and original forking support by: Mark Aufflick C<< <mark@aufflick.com> >>.
 
 =item Maintained by: Mark Aufflick
 
@@ -673,7 +694,10 @@ L<HTTP::Daemon>, L<HTTP::Daemon::App> and L<HTTP::Server::Simple> spring to mind
 
 =head1 LICENCE AND COPYRIGHT
 
-Copyright (c) 2007, Mark Aufflick C<< <mark@aufflick.com> >>. All rights reserved.
+Copyright (c) 2007, Mark Aufflick C<< <mark@aufflick.com> >>.
+Portions Copyright (c) 2007, Hans Dieter Pearcey C<< <hdp@pobox.com> >>
+
+All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.

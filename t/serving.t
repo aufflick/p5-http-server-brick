@@ -59,15 +59,21 @@ sub run_tests {
   
   # set the error out to stdout to play nice with test::harness
   my $server;
-  ok( $server = HTTP::Server::Brick->new(
+
+  my %server_args = (
       port => $port, host => $host, error_log => \*STDOUT,
-      daemon_class => $args{ssl} ? 'HTTP::Daemon::SSL' : 'HTTP::Daemon',
-      daemon_args  => $args{ssl} ? [
-        SSL_key_file => 't/test.pem',
-        SSL_cert_file => 't/test.pem',
-      ] : [],
       fork => $args{fork},
-     ), 'Created server object.');
+     );
+
+  if ($args{ssl}) {
+      $server_args{daemon_class} = 'HTTP::Daemon::SSL';
+      $server_args{daemon_args} = [
+          SSL_key_file => 't/test.pem',
+          SSL_cert_file => 't/test.pem',
+         ];
+  }
+  
+  ok( $server = HTTP::Server::Brick->new( %server_args ), 'Created server object.');
   isa_ok( $server, 'HTTP::Server::Brick');
 
 
@@ -224,7 +230,7 @@ sub run_tests {
   sleep(6); # just to be safe in case it takes some OS/hardware combinations a while to clean up
   waitpid($child_pid, WNOHANG);
   {
-    local $TODO = $args{ssl} ? "SSL accept() doesn't die on HUP?" : undef;
+    local $TODO = $args{ssl} ? "HTTP::Daemon::SSL 1.02 accept() never timesout (in violation of HTTP::Daemon docs)" : undef;
     cmp_ok(kill( SIGKILL, $child_pid), '==', 0, "Shouldn't need to force kill server");
   }
 }

@@ -2,6 +2,9 @@ Revision history for HTTP-Server-Brick
 
 $Id$
 
+0.1.0  Sat July 21
+       Implemented forking and SSL changes submitted by hdp
+
 0.0.9  Thur Jun 28
        fixed 'broken pipe' issue and also Build.PL dependency for people using Makefile.PL in CPAN shell
 

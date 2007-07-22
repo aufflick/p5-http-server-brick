@@ -1,4 +1,4 @@
-HTTP-Server-Brick version 0.0.9
+HTTP-Server-Brick version 0.1.0
 
 $Id$
 
@@ -34,18 +34,47 @@ DEPENDENCIES
 
 BUGS AND LIMITATIONS
 
-It's version 0.0.9 - there's bound to be some bugs!
+It's version 0.1.0 - there's bound to be some bugs!
 
-The tests fail on windows due to forking limitations. I don't see
-any reason why the server itself won't work but I haven't tried it
+The tests fail on windows due to forking limitations. I don't see any
+reason why the server itself won't work but I haven't tried it
 personally, and I have to figure out a way to test it from a test
 script that will work on Windows.
 
-No consideration has been given to SSL.
+In forking mode there is no attempt to limit the number of forked
+children - beware of forking yourself ;)
 
-No attention has been given to propagating any exception text into
-the http error (although the exception/die message will appear in
-the error_log).
+No attention has been given to propagating any exception text into the
+http error (although the exception/die message will appear in the
+error_log).
+
+The current version of HTTP::Daemon::SSL has a feature/documentation
+conflict (bug) where it will never timeout. This means your server
+won't respond to a HUP signal until the next request is served. If
+this is not satisfactory for you, check to see if a later version
+fixes the issue, or include the following code to patch
+HTTP::Daemon::SSL (works as of HTTP::Daemon::SSL version 1.02):
+
+  use HTTP::Daemon::SSL;
+  
+  {
+   package HTTP::Daemon::SSL;
+   
+   sub accept
+   {
+       my $self = shift;
+       my $pkg = shift || "HTTP::Daemon::ClientConn::SSL";
+       my ($sock, $peer) = IO::Socket::SSL::accept($self,$pkg);
+       if ($sock) {
+           ${*$sock}{'httpd_daemon'} = $self;
+           return wantarray ? ($sock, $peer) : $sock;
+       }
+       else {
+           return;
+       }
+   }
+  }
+
 
 Latest versions are always available from CPAN. Development versions
 are available from my CVS repository:
@@ -56,6 +85,9 @@ http://cvs.pumptheory.com/viewcvs/viewcvs.cgi/perl/HTTP-Server-Brick/
 COPYRIGHT AND LICENCE
 
 Copyright (C) 2007, Mark Aufflick <mark@aufflick.com> http://mark.aufflick.com
+Portions Copyright (c) 2007, Hans Dieter Pearcey C<< <hdp@pobox.com> >>
+
+All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
