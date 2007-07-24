@@ -14,7 +14,7 @@ use HTTP::Status;
 use POSIX qw(:sys_wait_h SIGHUP SIGKILL);
 
 my $port = $ENV{HSB_TEST_PORT} || 85432;
-my $host = $ENV{HSB_TEST_HOST} || 'localhost';
+my $host = $ENV{HSB_TEST_HOST} || '127.0.0.1';
 
 diag( '' );
 diag( '' );
