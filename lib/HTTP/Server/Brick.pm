@@ -63,6 +63,21 @@ This document describes HTTP::Server::Brick version 0.1.0
     # receives a HUP signal)
     $server->start;
 
+For an SSL (https) server, replace the C<new()> line above with:
+
+    use HTTP::Daemon::SSL;
+    
+    my $server = HTTP::Server::Brick->new(
+                                           port => 8889,
+                                           daemon_class => 'HTTP::Daemon::SSL',
+                                           daemon_args  => [
+                                              SSL_key_file  => 'my_ssl_key.pem',
+                                              SSL_cert_file => 'my_ssl_cert.pem',
+                                           ],
+                                         );
+
+See the docs of L<HTTP::Daemon::SSL> for other options.
+
 =head1 DESCRIPTION
 
 HTTP::Server::Brick allows you to quickly wrap a prototype web server around some
