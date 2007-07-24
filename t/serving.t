@@ -7,6 +7,7 @@ BEGIN {
     use_ok( 'HTTP::Server::Brick' );
 }
 
+use version;
 use LWP;
 use LWP::UserAgent;
 use HTTP::Status;
@@ -230,7 +231,12 @@ sub run_tests {
   sleep(6); # just to be safe in case it takes some OS/hardware combinations a while to clean up
   waitpid($child_pid, WNOHANG);
   {
-    local $TODO = $args{ssl} ? "HTTP::Daemon::SSL 1.02 accept() never timesout (in violation of HTTP::Daemon docs)" : undef;
-    cmp_ok(kill( SIGKILL, $child_pid), '==', 0, "Shouldn't need to force kill server");
+      my $current_hds_version = version->new($HTTP::Daemon::SSL::VERSION);
+      my $minimum_hds_version = version->new("1.03_01");
+      
+      local $TODO = $args{ssl} && $current_hds_version < $minimum_hds_version ?
+        "HTTP::Daemon::SSL 1.02 accept() never timesout (in violation of HTTP::Daemon docs)" : undef;
+      
+      cmp_ok(kill( SIGKILL, $child_pid), '==', 0, "Shouldn't need to force kill server");
   }
 }

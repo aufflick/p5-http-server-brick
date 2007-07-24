@@ -643,27 +643,7 @@ prototypes with WEBrick and implemented them in (what I hope is) a Perlish way.
 
 =item No attention has been given to propagating any exception text into the http error (although the exception/die message will appear in the error_log).
 
-=item The current version of HTTP::Daemon::SSL has a feature/documentation conflict where it will never timeout. This means your server won't respond to a HUP signal until the next request is served. If this is not satisfactory for you, check to see if a later version fixes the issue, or include the following code to patch HTTP::Daemon::SSL (works as of HTTP::Daemon::SSL version 1.02):
-
-  use HTTP::Daemon::SSL;
-  
-  {
-   package HTTP::Daemon::SSL;
-   
-   sub accept
-   {
-       my $self = shift;
-       my $pkg = shift || "HTTP::Daemon::ClientConn::SSL";
-       my ($sock, $peer) = IO::Socket::SSL::accept($self,$pkg);
-       if ($sock) {
-           ${*$sock}{'httpd_daemon'} = $self;
-           return wantarray ? ($sock, $peer) : $sock;
-       }
-       else {
-           return;
-       }
-   }
-  }
+=item Versions 1.02 and earlier of HTTP::Daemon::SSL has a feature/documentation conflict where it will never timeout. This means your server won't respond to a HUP signal until the next request is served. Version 1.03_01 (developer release) and later do not have this issue.
 
 =back
 

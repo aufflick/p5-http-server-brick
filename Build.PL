@@ -21,6 +21,9 @@ my $builder = Module::Build->new(
         'LWP::UserAgent' => 0,
 		'IO::Handle' => 0,
     },
+    recommends => {
+        'HTTP::Daemon::SSL' => '1.02',
+    },
     add_to_cleanup      => [ 'HTTP-Server-Brick-*' ],
 );
 
