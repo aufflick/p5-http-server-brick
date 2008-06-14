@@ -296,6 +296,12 @@ sub start {
         next if $self->{fork} and fork;
         while (my $req = $conn->get_request) {
 
+          # Provide an X-Brick-Remote-IP header
+          my ($r_port, $r_iaddr) = Socket::unpack_sockaddr_in($conn->peername);
+          my $ip = Socket::inet_ntoa($r_iaddr);
+          $req->headers->remove_header('X-Brick-Remote-IP');
+          $req->header('X-Brick-Remote-IP' => $ip) if defined $ip;
+
           my ($submap, $match) = $self->_map_request($req);
 
           if ($submap) {
@@ -585,6 +591,9 @@ This will always be empty for non-wildcard mounts.
 The documentation for L<HTTP::Request> will be of use for extracting all the other
 useful information.
 
+Added to the regular request headers created by L<HTTP::Request> is an X-Remote-IP header,
+which allows you to obtain the remote IP of the client. (Contributed by Hans Dieter Pearcey).
+
 =head2 Response
 
 The response object is an instance of L<HTTP::Response>. The useful operations (which
@@ -681,7 +690,7 @@ L<HTTP::Daemon>, L<HTTP::Daemon::App> and L<HTTP::Server::Simple> spring to mind
 
 =item Original version by: Mark Aufflick  C<< <mark@aufflick.com> >> L<http://mark.aufflick.com/>
 
-=item SSL and original forking support by: Mark Aufflick C<< <mark@aufflick.com> >>.
+=item SSL and original forking support by: Hans Dieter Pearcey  C<< <hdp@pobox.com> >>
 
 =item Maintained by: Mark Aufflick
 
@@ -689,8 +698,8 @@ L<HTTP::Daemon>, L<HTTP::Daemon::App> and L<HTTP::Server::Simple> spring to mind
 
 =head1 LICENCE AND COPYRIGHT
 
-Copyright (c) 2007, Mark Aufflick C<< <mark@aufflick.com> >>.
-Portions Copyright (c) 2007, Hans Dieter Pearcey C<< <hdp@pobox.com> >>
+Copyright (c) 2007 2008, Mark Aufflick C<< <mark@aufflick.com> >>.
+Portions Copyright (c) 2007 2008, Hans Dieter Pearcey C<< <hdp@pobox.com> >>
 
 All rights reserved.
 
