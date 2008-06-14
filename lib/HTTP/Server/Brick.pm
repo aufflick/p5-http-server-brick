@@ -1,7 +1,7 @@
 package HTTP::Server::Brick;
 
 use version;
-our $VERSION = qv('0.1.1');
+our $VERSION = qv(0.1.1);
 
 # $Id$
 
