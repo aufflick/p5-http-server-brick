@@ -1,7 +1,7 @@
 package HTTP::Server::Brick;
 
 use version;
-our $VERSION = qv(0.1.1);
+our $VERSION = qv(0.1.2);
 
 # $Id$
 
@@ -12,7 +12,7 @@ HTTP::Server::Brick - Simple pure perl http server for prototyping "in the style
 
 =head1 VERSION
 
-This document describes HTTP::Server::Brick version 0.1.1
+This document describes HTTP::Server::Brick version 0.1.2
 
 
 =head1 SYNOPSIS
@@ -94,6 +94,7 @@ use strict;
 use HTTP::Daemon;
 use HTTP::Status;
 use LWP::MediaTypes;
+use URI;
 
 use constant DEBUG => $ENV{DEBUG} || 0;
 
@@ -286,7 +287,12 @@ sub start {
         @{ $self->{daemon_args} },
        ) or die "Can't start daemon: $!";
 
-    $self->_log(error => "Server started on " . $self->{daemon}->url);
+    # HTTP::Server::Daemon seems inconsistent in returning a string vs URI object
+    my $url_string = UNIVERSAL::can($self->{daemon}->url, 'as_string') ?
+      $self->{daemon}->url->as_string :
+        $self->{daemon}->url;
+
+    $self->_log(error => "Server started on $url_string");
 
     while ($__server_should_run) {
         my $conn = $self->{daemon}->accept or next;
@@ -374,15 +380,21 @@ sub _handle_dynamic_request {
     $req->{path_info} = $match->{path_info} ? '/' . $match->{path_info} : undef;
 
     # and some other useful bits TODO: document (and, actually, subclass HTTP::Request...)
+
+    # It seems that in some cases (specifically when the url contains no explicit port),
+    # HTTP::Daemon returns a uri string instead of an object. RT #29042
+    my $url = $self->{daemon}->url;
+    $url = URI->new($url) if ! ref $url;
+
     if ($req->header('Host') =~ /^(.*):(.*)$/) {
         $req->{hostname} = $1;
         $req->{port} = $2;
     } elsif ($req->header('Host')) {
         $req->{hostname} = $req->header('Host');
-        $req->{port} = $self->{daemon}->url->port;
+        $req->{port} = $url->port;
     } else {
-        $req->{hostname} = $self->{daemon}->url->host;
-        $req->{port} = $self->{daemon}->url->port;
+        $req->{hostname} = $url->host;
+        $req->{port} = $url->port;
     }
 
     # actually call the handler
@@ -408,7 +420,7 @@ sub _handle_dynamic_request {
             $self->_log( access => "[$code] $match->{full_path}" );
 
         } elsif ($res->is_error) {
-            # should send user content and use $@ if provided
+            # TODO: should allow a way to specify custom error content
             $self->_send_error( $conn, $req, $res->code, $res->message );
 
         } elsif ($res->is_redirect) {
@@ -434,6 +446,8 @@ sub _handle_dynamic_request {
         }
     } else {
         $self->_send_error($conn, $req, RC_INTERNAL_SERVER_ERROR, 'Handler Failed');
+        $self->_log( error => "Handler Failed for mount: " . $match->{mount_path});
+        $self->_log( error => $@ ) if $@;
     }
 
     1;
@@ -659,7 +673,7 @@ prototypes with WEBrick and implemented them in (what I hope is) a Perlish way.
 
 =over
 
-=item It's version 0.1.1 - there's bound to be some bugs!
+=item It's version 0.1.2 - there's bound to be some bugs!
 
 =item The tests fail on windows due to forking limitations. I don't see any reason why the server itself won't work but I haven't tried it personally, and I have to figure out a way to test it from a test script that will work on Windows.
 
