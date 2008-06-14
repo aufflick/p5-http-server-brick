@@ -2,6 +2,9 @@ Revision history for HTTP-Server-Brick
 
 $Id$
 
+0.1.1  Sat June 14 2008
+       Implemented X-Brick-Remote-IP header patch, submitted by hdp, and test for same
+
 0.1.0  Sat July 21
        Implemented forking and SSL changes submitted by hdp
 

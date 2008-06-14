@@ -1,4 +1,4 @@
-HTTP-Server-Brick version 0.1.0
+HTTP-Server-Brick version 0.1.1
 
 $Id$
 
@@ -34,7 +34,7 @@ DEPENDENCIES
 
 BUGS AND LIMITATIONS
 
-It's version 0.1.0 - there's bound to be some bugs!
+It's version 0.1.1 - there's bound to be some bugs!
 
 The tests fail on windows due to forking limitations. I don't see any
 reason why the server itself won't work but I haven't tried it

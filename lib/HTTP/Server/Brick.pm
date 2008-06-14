@@ -1,7 +1,7 @@
 package HTTP::Server::Brick;
 
 use version;
-our $VERSION = qv('0.1.0');
+our $VERSION = qv('0.1.1');
 
 # $Id$
 
@@ -12,7 +12,7 @@ HTTP::Server::Brick - Simple pure perl http server for prototyping "in the style
 
 =head1 VERSION
 
-This document describes HTTP::Server::Brick version 0.1.0
+This document describes HTTP::Server::Brick version 0.1.1
 
 
 =head1 SYNOPSIS
@@ -659,7 +659,7 @@ prototypes with WEBrick and implemented them in (what I hope is) a Perlish way.
 
 =over
 
-=item It's version 0.1.0 - there's bound to be some bugs!
+=item It's version 0.1.1 - there's bound to be some bugs!
 
 =item The tests fail on windows due to forking limitations. I don't see any reason why the server itself won't work but I haven't tried it personally, and I have to figure out a way to test it from a test script that will work on Windows.
 
