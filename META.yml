@@ -1,6 +1,6 @@
 ---
 name: HTTP-Server-Brick
-version: 0.1.2
+version: 0.1.3
 author:
   - 'Mark Aufflick <mark@aufflick.com>'
 abstract: "Simple pure perl http/https server for prototyping \"in the style of\" Ruby's WEBrick"
@@ -24,6 +24,6 @@ meta-spec:
 provides:
   HTTP::Server::Brick:
     file: lib/HTTP/Server/Brick.pm
-    version: v0.1.2
+    version: v0.1.3
 resources:
   license: http://dev.perl.org/licenses/
