@@ -93,22 +93,26 @@ use strict;
 
 use HTTP::Daemon;
 use HTTP::Status;
+use HTTP::Request::Params;
 use LWP::MediaTypes;
+use Carp;
 use URI;
 
 use constant DEBUG => $ENV{DEBUG} || 0;
 
-
 my $__singleton;
 my $__server_should_run = 0;
 
-$SIG{__WARN__} = sub { $__singleton ? $__singleton->_log( error => '[warn] ' . shift ) : CORE::warn(@_) };
-$SIG{__DIE__} = sub {
-  CORE::die (@_) if $^S; # don't interfere with eval
-  $__singleton->_log( error => '[die] ' . $_[0] ) if $__singleton;
-  CORE::die (@_)
+my @warnings;
+
+$SIG{__WARN__} = sub {
+    push @warnings, @_;
+    $__singleton ? $__singleton->_log( error => '[warn] ' . shift ) : CORE::warn(@_)
 };
 $SIG{HUP} = sub { $__server_should_run = 0; };
+
+# die - so hard to override :(
+#*CORE::GLOBAL::die = *Carp::Confess;
 
 
 =head2 new
@@ -252,6 +256,7 @@ sub mount {
     }
 
     my $mount_type = exists $args->{handler} ? 'handler' :
+      exists $args->{template_class} ? "template class $args->{template_class}" :
       exists $args->{path} ? 'directory' : '(unknown)';
     $self->_log( error => 'Mounted' . ($args->{wildcard} ? ' wildcard' : '') . " $mount_type at $uri" );
 
@@ -268,6 +273,12 @@ any current request, or waiting for the next timeout (which defaults to 5s - see
 
 sub start {
     my $self = shift;
+
+    if ($self->{module_reload}) {
+        require Module::Reload;
+        Module::Reload->import;
+        $Module::Reload::Debug = 1;
+    }
 
     $__server_should_run = 1;
 
@@ -296,6 +307,10 @@ sub start {
 
     while ($__server_should_run) {
         my $conn = $self->{daemon}->accept or next;
+        
+        # pre-render cleanup
+        Module::Reload->check if $self->{module_reload};
+        @warnings = ();
 
         # if we're a forking server, fork. The parent will wait for the next request.
         # TODO: limit number of children
@@ -309,12 +324,12 @@ sub start {
           $req->header('X-Brick-Remote-IP' => $ip) if defined $ip;
 
           my ($submap, $match) = $self->_map_request($req);
-
+          
           if ($submap) {
               if (exists $submap->{path}) {
                   $self->_handle_static_request( $conn, $req, $submap, $match);
                   
-              } elsif (exists $submap->{handler}) {
+              } elsif (exists $submap->{handler} || exists $submap->{template_class}) {
                   $self->_handle_dynamic_request( $conn, $req, $submap, $match);
 
               } else {
@@ -375,11 +390,12 @@ sub _handle_dynamic_request {
     my $res = HTTP::Response->new;
     $res->base($match->{full_path});
 
-    # stuff the match info into the request
-    $req->{mount_path} = $match->{mount_path};
-    $req->{path_info} = $match->{path_info} ? '/' . $match->{path_info} : undef;
+    # send the handlers something more useful than a raw HTTP::Request
+    my $params = HTTP::Request::Params->new({ req => $req });
 
-    # and some other useful bits TODO: document (and, actually, subclass HTTP::Request...)
+    # stuff the match info into the request::params (TODO: Subclass)
+    $params->{mount_path} = $match->{mount_path};
+    $params->{path_info} = $match->{path_info} ? '/' . $match->{path_info} : undef;
 
     # It seems that in some cases (specifically when the url contains no explicit port),
     # HTTP::Daemon returns a uri string instead of an object. RT #29042
@@ -397,8 +413,17 @@ sub _handle_dynamic_request {
         $req->{port} = $url->port;
     }
 
-    # actually call the handler
-    if ( my $return_code = eval { $submap->{handler}->($req, $res) } ) {
+    # actually call the handler (which may be our canned template::declare handler)
+    my $return_code;
+    if (exists $submap->{template_class}) {
+        my $template = '';
+        $template .= $params->{path_info} if $params->{path_info};
+        $return_code = eval { _template_handler( $submap->{template_class}, $template, $params, $res ) };
+    } else {
+        $return_code = eval { $submap->{handler}->($params, $res) };
+    }
+        
+    if ($return_code) {
 
         # choose the status in this order:
         #  1. if the handler died or returned false => RC_INTERNAL_SERVER_ERROR
@@ -406,9 +431,8 @@ sub _handle_dynamic_request {
         #  3. if the handler returned something that looks like a return code
         #  4. RC_OK
                     
-        my $code = !$return_code ? RC_INTERNAL_SERVER_ERROR :
-          $res->code ? $res->code :
-            $return_code >= 100 ? $return_code : RC_OK;
+        my $code = $res->code ? $res->code :
+          $return_code >= 100 ? $return_code : RC_OK;
                     
         $res->code($code);
 
@@ -445,11 +469,28 @@ sub _handle_dynamic_request {
                           'Handler Returned an Unimplemented Response Code: ' . $code);
         }
     } else {
-        $self->_send_error($conn, $req, RC_INTERNAL_SERVER_ERROR, 'Handler Failed');
+        $self->_send_error($conn, $req, RC_INTERNAL_SERVER_ERROR, 'Handler Failed', $@);
         $self->_log( error => "Handler Failed for mount: " . $match->{mount_path});
-        $self->_log( error => $@ ) if $@;
     }
 
+    1;
+}
+
+sub _template_handler {
+    my ($class, $template, $params, $res) = @_;
+
+    Template::Declare->roots([$class]);
+    
+    if (Template::Declare->has_template($template)) {
+
+        $res->content( Template::Declare->show( $template, $params, $res ) );
+        
+    } else {
+        
+        die "Template '$template' not found in class '$class'";
+    }
+
+    # template can return a non-OK response using $res
     1;
 }
 
@@ -482,21 +523,37 @@ END_FOOTER
 }
 
 sub _send_error {
-    my ($self, $conn, $req, $code, $text) = @_;
+    my ($self, $conn, $req, $code, $text, $exception) = @_;
+    
+    # TODO: escape exception_html & warnings html
+    my $exception_html = $exception;
+    $exception_html =~ s!\\n!<br />!g if $exception;
+    
+    my $warnings_html = '';
+    for my $warning (@warnings) {
+        my $warning_html = $warning;
+        $warning_html =~ s!\\n!<br />!g;
+        $warnings_html .= $warning_html;
+    }
 
-    $conn->send_error($code, $text);
+    $conn->send_error($code,
+                      ($text || '')
+                        . ($exception ? "<br /><br /><b>Exception:</b><br /><div style=\"font-family: monospace;\">$exception_html</div>" : '')
+                          . (@warnings ? "<br /><br /><b>Warnings:</b><div style=\"font-family: monospace;\">$warnings_html</div>" : ''));
 
-    $self->_log_status($req, $code, $text);
+    $self->_log_status($req, $code, $text, $exception_html);
 }
 
 sub _log_status {
-    my ($self, $req, $code, $text) = @_;
+    my ($self, $req, $code, $text, $exception) = @_;
 
     if ($code == RC_OK || $code == RC_UNAUTHORIZED || $code == RC_NOT_FOUND) {
         $self->_log( access => "[$code] " . $req->uri->path );
     }
 
-    $self->_log( error => "[$code] [" . $req->uri->path . '] ' . ($text || status_message($code)) )
+    $self->_log( error => "[$code] [" . $req->uri->path . '] '
+                   . ($text || status_message($code))
+                     . ($exception ? "\n$exception" : '') )
       unless $code == RC_OK;
 }
 
