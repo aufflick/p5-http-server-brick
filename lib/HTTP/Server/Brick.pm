@@ -592,7 +592,7 @@ The request object is an instance of L<HTTP::Request> with two extra properties:
 
 =item C<$req-E<gt>{mount_path}>
 
-The mounted path that was matched. This will always be identical to C<$req->uri->path>
+The mounted path that was matched. This will always be identical to C<< $req->uri->path >>
 for non-wildcard mounts.
 
 =item C<$req-E<gt>{path_info}>
