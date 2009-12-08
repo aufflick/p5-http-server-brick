@@ -87,9 +87,6 @@ sub run_tests {
   my $temp_dir = POSIX::tmpnam();
   mkdir $temp_dir or die "Unable to create temp dir $temp_dir";
 
-  my $temp_dir_non_indexed = POSIX::tmpnam();
-  mkdir $temp_dir_non_indexed or die "Unable to create temp dir $temp_dir_non_indexed";
-
   {
       my $text_fh;
       open($text_fh, ">$temp_dir/$temp_text_file") or die "Unable to write to temp file $temp_text_file";
@@ -102,10 +99,11 @@ sub run_tests {
 
   # clean up temp dirs
   END {
+      no warnings 'closure';
+      
       unlink "$temp_dir/$temp_text_file" if $temp_dir && $temp_text_file && -f "$temp_dir/$temp_text_file";
-      unlink "$temp_dir/$temp_html_file" if $temp_dir && $temp_html_file&& -f "$temp_dir/$temp_html_file";
-      rmdir $temp_dir if -d $temp_dir;
-      rmdir $temp_dir_non_indexed if -d $temp_dir_non_indexed;
+      unlink "$temp_dir/$temp_html_file" if $temp_dir && $temp_html_file && -f "$temp_dir/$temp_html_file";
+      rmdir $temp_dir if $temp_dir && -d $temp_dir;
   }
 
   # no point testing these - they just return 1.
