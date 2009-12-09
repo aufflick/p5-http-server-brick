@@ -1,7 +1,7 @@
 package HTTP::Server::Brick;
 
 use version;
-our $VERSION = qv(0.1.3);
+our $VERSION = qv(0.1.4);
 
 # $Id$
 
@@ -12,7 +12,7 @@ HTTP::Server::Brick - Simple pure perl http server for prototyping "in the style
 
 =head1 VERSION
 
-This document describes HTTP::Server::Brick version 0.1.3
+This document describes HTTP::Server::Brick version 0.1.4
 
 
 =head1 SYNOPSIS
@@ -673,7 +673,7 @@ prototypes with WEBrick and implemented them in (what I hope is) a Perlish way.
 
 =over
 
-=item It's version 0.1.3 - there's bound to be some bugs!
+=item It's version 0.1.4 - there's bound to be some bugs!
 
 =item The tests fail on windows due to forking limitations. I don't see any reason why the server itself won't work but I haven't tried it personally, and I have to figure out a way to test it from a test script that will work on Windows.
 
@@ -686,7 +686,7 @@ prototypes with WEBrick and implemented them in (what I hope is) a Perlish way.
 =back
 
 If you want to check out the latest development version of HTTP::Server::Brick
-you can do so from my L<CVS Server|http://cvs.pumptheory.com/viewcvs/viewcvs.cgi/perl/HTTP-Server-Brick/>.
+you can do so from my GitHub account L<http://github.com/aufflick/p5-http-server-brick>.
 
 Please report any bugs or feature requests to
 C<bug-http-server-brick@rt.cpan.org>, through the web interface at
