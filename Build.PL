@@ -5,6 +5,12 @@ use warnings;
 use Module::Build;
 
 my $builder = Module::Build->new(
+    meta_merge => {
+        resources => {
+            repository => 'http://github.com/aufflick/p5-http-server-brick',
+        },
+    },
+
     module_name         => 'HTTP::Server::Brick',
     license             => 'perl',
     dist_author         => 'Mark Aufflick <mark@aufflick.com>',
