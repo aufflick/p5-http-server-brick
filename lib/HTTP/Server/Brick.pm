@@ -470,7 +470,12 @@ sub _render_directory {
 <a href="..">.. (Parent directory)</a>
 END_HEADER
 
-        $res->add_content("<a href=\"$_\">$_</a>\n") for map {s!.*/!!; $_} sort glob "$path/*";
+        for (sort glob "$path/*") {
+            my $is_directory = -d $_;
+            s!.*/!!;
+            $_ .= '/' if $is_directory;
+            $res->add_content("<a href=\"$_\">$_</a>\n");
+        }
 
         $res->add_content(<<END_FOOTER);
 </pre></blockquote>
