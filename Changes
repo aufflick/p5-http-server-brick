@@ -2,6 +2,9 @@ Revision history for HTTP-Server-Brick
 
 $Id$
 
+0.1.4  Sat May 11 2013
+       Changed mount to return $self and added mount_root as per suggestions from Gintautas Grigelionis
+
 0.1.3  Mon June 16 2008
        Fixed bug in test where incorrect # tests were reported without SSL installed
 

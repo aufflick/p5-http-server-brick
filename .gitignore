@@ -3,3 +3,5 @@ HTTP-Server-Brick-*
 MANIFEST.bak
 Makefile
 _build
+MYMETA.yml
+blib

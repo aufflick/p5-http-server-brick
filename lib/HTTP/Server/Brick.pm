@@ -164,6 +164,10 @@ from HTTP::Daemon.
 Sometimes you need to pass extra arguments to your C<daemon_class>, e.g. SSL
 configuration.  This arrayref will be dereferenced and passed to C<new>.
 
+=item fork
+
+Set to true if you want a forking server.
+
 =back
 
 =cut
@@ -227,12 +231,43 @@ Static handlers that are directories default to wildcard true.
 The site map is always searched depth-first, in other words a more specific
 uri will trump a less-specific one.
 
+=head3 return value
+
+C<mount> returns C<$self> so that it can be chained into a one-liner if desired.
+
+=head3 shortcut invocation
+
+As a shortcut also to aid one-liners, instead of a hashref the second argument can be
+either a path string or a coderef, mapped like so:
+
+=over
+
+=item string
+
+equivalent to C<{ path => the_string, wildcard => 1 }>
+
+=item coderef
+
+equivalent to C<{ handler => coderef, wildcard => 0 }>
+
+=back
+
+Eg. to quickly server your current directory:
+
+  perl -MHTTP::Server::Brick -e 'HTTP::Server::Brick->new(fork=>1)->mount(qw(/ .))->start'
+
 =cut
 
 sub mount {
     my ($self, $uri, $args) = @_;
 
-    ref($args) eq 'HASH' or die 'third arg to mount must be a hashref';
+    if (ref($args) eq 'CODE') {
+        $args = { handler => $args, wildcard => 0 };
+    } elsif (!ref($args)) {
+        $args = { path => $args, wildcard => 1 };
+    } elsif (ref($args) ne 'HASH') {
+        die 'third arg to mount must be a hashref, coderef or path string';
+    }
 
     my $depth;
     if ($uri eq '/') {
@@ -255,7 +290,7 @@ sub mount {
       exists $args->{path} ? 'directory' : '(unknown)';
     $self->_log( error => 'Mounted' . ($args->{wildcard} ? ' wildcard' : '') . " $mount_type at $uri" );
 
-    1;
+    return $self;
 }
 
 =head2 start
