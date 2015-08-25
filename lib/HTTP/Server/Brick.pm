@@ -1,7 +1,7 @@
 package HTTP::Server::Brick;
 
 use version;
-our $VERSION = qv(0.1.4);
+our $VERSION = qv(0.1.5);
 
 # $Id$
 
@@ -12,7 +12,7 @@ HTTP::Server::Brick - Simple pure perl http server for prototyping "in the style
 
 =head1 VERSION
 
-This document describes HTTP::Server::Brick version 0.1.4
+This document describes HTTP::Server::Brick version 0.1.5
 
 
 =head1 SYNOPSIS
