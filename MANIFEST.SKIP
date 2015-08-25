@@ -11,3 +11,5 @@
 ^.git
 ^HTTP-Server-Brick
 ^_build
+^MYMETA\.yml$
+^MYMETA\.json$
