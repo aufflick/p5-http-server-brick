@@ -5,3 +5,6 @@ Makefile
 _build
 MYMETA.yml
 blib
+.perl-version
+META.json
+MYMETA.json

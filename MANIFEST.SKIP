@@ -13,3 +13,4 @@
 ^_build
 ^MYMETA\.yml$
 ^MYMETA\.json$
+^\.perl-version$
