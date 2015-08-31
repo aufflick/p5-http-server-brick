@@ -318,7 +318,7 @@ sub start {
         ReuseAddr => 1,
         LocalPort => $self->{port},
         LocalHost => $self->{host},
-        Timeout => 5,
+        Timeout => exists $self->{timeout} ? $self->{timeout} : 5,
         @{ $self->{daemon_args} },
        ) or die "Can't start daemon: $!";
 

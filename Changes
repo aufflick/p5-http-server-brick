@@ -4,7 +4,8 @@ $Id$
 
 0.1.6  Mon August 31 2015
        Fixed test to not use out of bound server port as per RT #106745.
-
+       Honour timeout argument as per RT #101629
+       
 0.1.5  Wed August 26 2015
        Added trailing slash to directories in directory listing to remove redirection. Pull request
        from github/polettix.
