@@ -14,6 +14,7 @@ use LWP;
 use LWP::UserAgent;
 use HTTP::Status;
 use POSIX qw(:sys_wait_h SIGHUP SIGKILL);
+use File::Temp;
 
 my $port = $ENV{HSB_TEST_PORT} || 65432;
 my $host = $ENV{HSB_TEST_HOST} || '127.0.0.1';
@@ -84,8 +85,7 @@ sub run_tests {
   my $temp_text_file = 'foo.txt';
   my $temp_html_file = 'foo.html';
 
-  my $temp_dir = POSIX::tmpnam();
-  mkdir $temp_dir or die "Unable to create temp dir $temp_dir";
+  my $temp_dir = File::Temp::tempdir();
 
   {
       my $text_fh;
