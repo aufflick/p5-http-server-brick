@@ -1,0 +1,8 @@
+#!/bin/sh
+if [ $# = 1 ]; then
+	perl -MHTTP::Server::Brick -e "HTTP::Server::Brick->new( port=> 3000 )->mount( '/' => { path => '$1' } )->start;"
+else
+	echo "Usage: $( basename "$0" ) <path>"
+	echo "  Serves files under <path> via HTTP"
+	exit 1
+fi
